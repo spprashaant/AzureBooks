@@ -1,0 +1,45 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AZURE_FUNCTIONAPP_NAME: DbAccessFnApp
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' ## code directory path
+  DOTNET_CORE_VERSION: '6.0.x' ## set this to your dotnet version
+  working-directory: ./
+  
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@master
+      
+    - name: Setup DotNet ${{ env.DOTNET_CORE_VERSION }} Environment
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+        
+    - name: 'Run dotnet'
+      run: |
+        dotnet build --configuration Release
+        dotnet publish --configuration Release --output ./publish
+      working-directory: ${{ env.working-directory }}
+      
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: $${{ env.working-directory }}/publish
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
