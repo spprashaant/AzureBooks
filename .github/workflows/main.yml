@@ -30,6 +30,9 @@ jobs:
         dotnet publish --configuration Release --output ./publish
       working-directory: ${{ env.working-directory }}
       
+    - name: 'List publish output'
+      run: ls ./publish
+
     - name: 'Login via Azure CLI'
       uses: azure/login@v1
       with:
@@ -40,6 +43,6 @@ jobs:
       id: fa
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: $${{ env.working-directory }}/publish
+        package: './publish'
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
 
